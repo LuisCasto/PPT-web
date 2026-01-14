@@ -60,45 +60,45 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
   };
 
   return (
-    <div className="min-h-screen bg-black p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-black p-4">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <button
             onClick={onBackToMenu}
-            className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg"
+            className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg"
           >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Menú</span>
+            <ArrowLeft size={16} />
+            <span className="font-medium text-sm">Menú</span>
           </button>
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white">{playerName}</h2>
-            <p className="text-gray-400">{mode === 'normal' ? '😊 Modo Normal' : '😠 Modo IMPOSIBLE'}</p>
+            <h2 className="text-2xl font-bold text-white">{playerName}</h2>
+            <p className="text-gray-400 text-sm">{mode === 'normal' ? '😊 Modo Normal' : '😠 Modo IMPOSIBLE'}</p>
           </div>
-          <div className="w-32"></div>
+          <div className="w-24"></div>
         </div>
 
         {/* Marcador */}
-        <div className="bg-gray-900 rounded-2xl p-8 mb-8 border-2 border-gray-800">
-          <div className="grid grid-cols-3 gap-8 text-center">
+        <div className="bg-gray-900 rounded-xl p-6 mb-6 border-2 border-gray-800">
+          <div className="grid grid-cols-3 gap-6 text-center">
             <div>
-              <p className="text-6xl mb-3">👤</p>
-              <p className="text-5xl font-black text-green-400 mb-2">{gameState.playerWins}</p>
-              <p className="text-gray-400 font-semibold">Tú</p>
+              <p className="text-4xl mb-2">👤</p>
+              <p className="text-4xl font-black text-green-400 mb-1">{gameState.playerWins}</p>
+              <p className="text-gray-400 font-semibold text-sm">Tú</p>
             </div>
             <div>
-              <p className="text-4xl mb-3">🤝</p>
-              <p className="text-4xl font-black text-orange-400 mb-2">{gameState.ties}</p>
-              <p className="text-gray-400 font-semibold">Empates</p>
+              <p className="text-3xl mb-2">🤝</p>
+              <p className="text-3xl font-black text-orange-400 mb-1">{gameState.ties}</p>
+              <p className="text-gray-400 font-semibold text-sm">Empates</p>
             </div>
             <div>
-              <p className="text-6xl mb-3">🤖</p>
-              <p className="text-5xl font-black text-red-400 mb-2">{gameState.cpuWins}</p>
-              <p className="text-gray-400 font-semibold">CPU</p>
+              <p className="text-4xl mb-2">🤖</p>
+              <p className="text-4xl font-black text-red-400 mb-1">{gameState.cpuWins}</p>
+              <p className="text-gray-400 font-semibold text-sm">CPU</p>
             </div>
           </div>
-          <div className="mt-6 text-center pt-6 border-t border-gray-800">
-            <p className="text-yellow-400 text-2xl font-bold">
+          <div className="mt-4 text-center pt-4 border-t border-gray-800">
+            <p className="text-yellow-400 text-xl font-bold">
               📊 Puntuación: {gameState.score}
             </p>
           </div>
@@ -106,27 +106,27 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
 
         {/* Resultado última ronda */}
         {lastRound && (
-          <div className={`rounded-2xl p-10 mb-8 border-4 ${
+          <div className={`rounded-xl p-6 mb-6 border-3 ${
             lastRound.result === 'player' ? 'bg-green-900 border-green-500' :
             lastRound.result === 'cpu' ? 'bg-red-900 border-red-500' :
             'bg-orange-900 border-orange-500'
           }`}>
-            <p className={`text-center text-4xl font-black mb-8 ${
+            <p className={`text-center text-3xl font-black mb-6 ${
               lastRound.result === 'player' ? 'text-green-300' :
               lastRound.result === 'cpu' ? 'text-red-300' : 'text-orange-300'
             }`}>
               {lastRound.result === 'player' ? '🎉 ¡GANASTE!' :
                lastRound.result === 'cpu' ? '💀 PERDISTE' : '🤝 ¡EMPATE!'}
             </p>
-            <div className="flex justify-center items-center gap-16">
+            <div className="flex justify-center items-center gap-12">
               <div className="text-center">
-                <div className="text-9xl mb-4">{moves[lastRound.playerMove].emoji}</div>
-                <p className="text-white text-xl font-bold">{moves[lastRound.playerMove].name}</p>
+                <div className="text-6xl mb-3">{moves[lastRound.playerMove].emoji}</div>
+                <p className="text-white text-lg font-bold">{moves[lastRound.playerMove].name}</p>
               </div>
-              <div className="text-white text-5xl font-black">VS</div>
+              <div className="text-white text-4xl font-black">VS</div>
               <div className="text-center">
-                <div className="text-9xl mb-4">{moves[lastRound.cpuMove].emoji}</div>
-                <p className="text-white text-xl font-bold">{moves[lastRound.cpuMove].name}</p>
+                <div className="text-6xl mb-3">{moves[lastRound.cpuMove].emoji}</div>
+                <p className="text-white text-lg font-bold">{moves[lastRound.cpuMove].name}</p>
               </div>
             </div>
           </div>
@@ -134,37 +134,37 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
 
         {/* Botones */}
         {!gameOver ? (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((move) => (
               <button
                 key={move}
                 onClick={() => makeMove(move)}
                 disabled={isLoading}
-                className="bg-gray-800 hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-gray-800 text-white font-bold py-16 rounded-2xl transition-all disabled:cursor-not-allowed border-4 border-gray-700 hover:border-blue-500 group"
+                className="bg-gray-800 hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-gray-800 text-white font-bold py-12 rounded-xl transition-all disabled:cursor-not-allowed border-3 border-gray-700 hover:border-blue-500 group"
               >
-                <div className="text-8xl mb-4 group-hover:scale-110 transition-transform">{moves[move].emoji}</div>
-                <div className="text-2xl font-bold">{moves[move].name}</div>
+                <div className="text-6xl mb-3 group-hover:scale-110 transition-transform">{moves[move].emoji}</div>
+                <div className="text-xl font-bold">{moves[move].name}</div>
               </button>
             ))}
           </div>
         ) : (
-          <div className="bg-gray-900 rounded-2xl p-12 text-center border-4 border-gray-800">
-            <div className="text-8xl mb-6">{winner === 'player' ? '🏆' : '😢'}</div>
-            <h2 className="text-5xl font-black text-white mb-4">
+          <div className="bg-gray-900 rounded-xl p-8 text-center border-3 border-gray-800">
+            <div className="text-6xl mb-4">{winner === 'player' ? '🏆' : '😢'}</div>
+            <h2 className="text-4xl font-black text-white mb-3">
               {winner === 'player' ? '¡VICTORIA!' : 'DERROTA'}
             </h2>
-            <p className="text-gray-400 text-2xl mb-8">
+            <p className="text-gray-400 text-xl mb-6">
               {winner === 'player' ? '¡Has ganado la partida!' : 'La CPU ha ganado'}
             </p>
-            <div className="bg-gray-800 rounded-xl p-6 inline-block mb-8">
-              <p className="text-yellow-400 text-3xl font-black">
+            <div className="bg-gray-800 rounded-xl p-4 inline-block mb-6">
+              <p className="text-yellow-400 text-2xl font-black">
                 {gameState.score} puntos
               </p>
             </div>
             <br />
             <button
               onClick={onBackToMenu}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-colors text-xl"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors text-lg"
             >
               Volver al menú
             </button>
