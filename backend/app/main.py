@@ -22,12 +22,15 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # CORS - Configuración estricta
+# Permitir todos los orígenes en desarrollo, específicos en producción
+cors_origins = settings.BACKEND_CORS_ORIGINS if settings.is_production else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],  # Solo métodos necesarios
-    allow_headers=["Content-Type", "Authorization"],  # Solo headers necesarios
+    allow_methods=["GET", "POST", "OPTIONS"],  # Incluir OPTIONS para preflight
+    allow_headers=["*"],  # Permitir todos los headers
     max_age=600,  # Cache preflight por 10 minutos
 )
 
