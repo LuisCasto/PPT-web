@@ -14,7 +14,7 @@ class LeaderboardEntry(BaseModel):
     score: int = Field(
         ..., 
         ge=-500, 
-        le=500,
+        le=1500,
         description="Puntuación del jugador"
     )
     mode: str = Field(
@@ -56,7 +56,7 @@ class LeaderboardEntry(BaseModel):
     def validate_score(cls, v):
         # Validar que el score esté en un rango razonable
         # Máximo: 5 victorias = 500, Mínimo: 5 derrotas = -500
-        if v < -500 or v > 500:
+        if v < -500 or v > 1500:
             raise ValueError('Puntuación fuera de rango válido')
         return v
     

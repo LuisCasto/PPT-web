@@ -13,7 +13,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
     description="API para el juego Piedra, Papel o Tijera",
-    docs_url="/docs" if not settings.is_production else None,  # Desactivar docs en producción
+    docs_url="/docs" if not settings.is_production else None,
     redoc_url="/redoc" if not settings.is_production else None
 )
 
@@ -22,16 +22,15 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # CORS - Configuración estricta
-# Permitir todos los orígenes en desarrollo, específicos en producción
 cors_origins = settings.BACKEND_CORS_ORIGINS if settings.is_production else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=["*"],  # Permitir todos los orígenes por ahora
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],  # Incluir OPTIONS para preflight
-    allow_headers=["*"],  # Permitir todos los headers
-    max_age=600,  # Cache preflight por 10 minutos
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    max_age=600,
 )
 
 # Security Headers Middleware
@@ -40,23 +39,15 @@ async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     
     if settings.SECURITY_HEADERS_ENABLED:
-        # Prevenir clickjacking
         response.headers["X-Frame-Options"] = "DENY"
-        
-        # Prevenir MIME sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"
-        
-        # XSS Protection (legacy browsers)
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        
-        # Referrer Policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         
-        # Content Security Policy
+        # CSP más permisivo en producción para evitar problemas
         if settings.is_production:
-            response.headers["Content-Security-Policy"] = "default-src 'self'"
+            response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' *"
         
-        # Strict Transport Security (solo en producción con HTTPS)
         if settings.is_production:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     
@@ -66,9 +57,13 @@ async def add_security_headers(request: Request, call_next):
 if settings.is_production:
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["yourdomain.com", "*.yourdomain.com"]  # Configurar con tu dominio
+        allowed_hosts=[
+            "backend-ppt-p0w6.onrender.com",
+            "*.onrender.com",
+            "localhost",
+            "127.0.0.1"
+        ]
     )
-
 # Eventos de inicio y cierre
 @app.on_event("startup")
 async def startup_event():
@@ -78,7 +73,6 @@ async def startup_event():
     
     await connect_to_mongo()
     
-    # Crear índices en MongoDB para mejor performance
     if settings.CREATE_INDEXES_ON_STARTUP:
         from app.services.database import create_indexes
         await create_indexes()
@@ -95,17 +89,34 @@ app.include_router(game.router, prefix=settings.API_V1_STR)
 app.include_router(leaderboard.router, prefix=settings.API_V1_STR)
 
 # Ruta raíz
-@app.get("/")
+@app.get("/", tags=["root"])
 async def root():
     return {
         "message": "🎮 Bienvenido a la API de Piedra, Papel o Tijera",
         "version": "1.0.0",
         "environment": settings.ENVIRONMENT,
-        "docs": "/docs" if not settings.is_production else "Deshabilitado en producción"
+        "api_prefix": settings.API_V1_STR,
+        "health_check": "/health",
+        "documentation": "/docs" if not settings.is_production else "Deshabilitado en producción"
+    }
+
+# Ruta de bienvenida de la API
+@app.get("/api", tags=["root"])
+@app.get("/api/", tags=["root"])
+async def api_root():
+    return {
+        "message": "🎮 API de Piedra, Papel o Tijera",
+        "version": "1.0.0",
+        "endpoints": {
+            "game": "/api/game/play",
+            "leaderboard_normal": "/api/leaderboard/normal",
+            "leaderboard_imposible": "/api/leaderboard/imposible",
+            "save_score": "/api/leaderboard"
+        }
     }
 
 # Health check
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health_check():
     return {
         "status": "healthy",
@@ -118,7 +129,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     """Handler global para excepciones no capturadas"""
     print(f"❌ Error no capturado: {str(exc)}")
     
-    # En producción, no revelar detalles del error
     if settings.is_production:
         return JSONResponse(
             status_code=500,

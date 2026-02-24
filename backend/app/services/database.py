@@ -77,7 +77,7 @@ async def save_leaderboard_entry(player_name: str, score: int, mode: str):
     if not player_name or len(player_name) > settings.MAX_PLAYER_NAME_LENGTH:
         raise ValueError("Nombre de jugador inválido")
     
-    if score < -500 or score > 500:
+    if score < -500 or score > 1500:
         raise ValueError("Puntuación fuera de rango válido")
     
     if mode not in settings.ALLOWED_GAME_MODES:
