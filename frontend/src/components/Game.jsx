@@ -1,65 +1,29 @@
-import { useState, useEffect } from 'react';
+/**
+ * Game.jsx — Refactorizado
+ *
+ * Antes: componente con Feature Envy — mezclaba lógica HTTP,
+ *        cálculo de score y manejo de estado directamente.
+ *
+ * Después: componente limpio que solo observa el estado
+ *          a través del hook useGameObserver y delega
+ *          toda la lógica al mismo. Aplica SRP.
+ */
+
 import { ArrowLeft } from 'lucide-react';
-import { gameAPI, leaderboardAPI } from '../services/Api';
+import { useGameObserver } from '../hooks/useGameObserver';
+
+const moves = {
+  1: { emoji: '🪨', name: 'Piedra' },
+  2: { emoji: '📄', name: 'Papel' },
+  3: { emoji: '✂️', name: 'Tijera' },
+};
 
 const Game = ({ playerName, mode, onBackToMenu }) => {
-  const [gameState, setGameState] = useState({
-    playerWins: 0,
-    cpuWins: 0,
-    ties: 0,
-    score: 0,
-  });
-  const [lastRound, setLastRound] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-  const [winner, setWinner] = useState(null);
+  // Observer: el componente "observa" el estado, no lo gestiona
+  const { gameState, handleMove } = useGameObserver(playerName, mode);
 
-
-
-  const moves = {
-    1: { emoji: '🪨', name: 'Piedra' },
-    2: { emoji: '📄', name: 'Papel' },
-    3: { emoji: '✂️', name: 'Tijera' },
-  };
-
-  const makeMove = async (playerMove) => {
-    if (gameOver || isLoading) return;
-
-    setIsLoading(true);
-    try {
-      const result = await gameAPI.play(playerMove, mode);
-
-      const newState = { ...gameState };
-
-      if (result.result === 'player') {
-        newState.playerWins += 1;
-      } else if (result.result === 'cpu') {
-        newState.cpuWins += 1;
-      } else {
-        newState.ties += 1;
-      }
-
-      newState.score = (newState.playerWins * 100) - (newState.cpuWins * 100) + (newState.ties * 25);
-
-      setGameState(newState);
-      setLastRound({
-        playerMove,
-        cpuMove: result.cpu_move,
-        result: result.result,
-      });
-
-      if (newState.playerWins >= 5 || newState.cpuWins >= 5) {
-        setGameOver(true);
-        setWinner(newState.playerWins >= 5 ? 'player' : 'cpu');
-        await leaderboardAPI.saveScore(playerName, newState.score, mode);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al hacer la jugada: ' + (error.message || 'Error desconocido'));
-    } finally {
-      setTimeout(() => setIsLoading(false), 500);
-    }
-  };
+  const { playerWins, cpuWins, ties, score, lastRound, isLoading, gameOver, winner } =
+    gameState;
 
   return (
     <div className="min-h-screen bg-black p-4">
@@ -75,9 +39,11 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
           </button>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white">{playerName}</h2>
-            <p className="text-gray-400 text-sm">{mode === 'normal' ? '😊 Modo Normal' : '😠 Modo IMPOSIBLE'}</p>
+            <p className="text-gray-400 text-sm">
+              {mode === 'normal' ? '😊 Modo Normal' : '😠 Modo IMPOSIBLE'}
+            </p>
           </div>
-          <div className="w-24"></div>
+          <div className="w-24" />
         </div>
 
         {/* Marcador */}
@@ -85,66 +51,84 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
           <div className="grid grid-cols-3 gap-6 text-center">
             <div>
               <p className="text-4xl mb-2">👤</p>
-              <p className="text-4xl font-black text-green-400 mb-1">{gameState.playerWins}</p>
+              <p className="text-4xl font-black text-green-400 mb-1">{playerWins}</p>
               <p className="text-gray-400 font-semibold text-sm">Tú</p>
             </div>
             <div>
               <p className="text-3xl mb-2">🤝</p>
-              <p className="text-3xl font-black text-orange-400 mb-1">{gameState.ties}</p>
+              <p className="text-3xl font-black text-orange-400 mb-1">{ties}</p>
               <p className="text-gray-400 font-semibold text-sm">Empates</p>
             </div>
             <div>
               <p className="text-4xl mb-2">🤖</p>
-              <p className="text-4xl font-black text-red-400 mb-1">{gameState.cpuWins}</p>
+              <p className="text-4xl font-black text-red-400 mb-1">{cpuWins}</p>
               <p className="text-gray-400 font-semibold text-sm">CPU</p>
             </div>
           </div>
           <div className="mt-4 text-center pt-4 border-t border-gray-800">
             <p className="text-yellow-400 text-xl font-bold">
-              📊 Puntuación: {gameState.score}
+              📊 Puntuación: {score}
             </p>
           </div>
         </div>
 
         {/* Resultado última ronda */}
         {lastRound && (
-          <div className={`rounded-xl p-6 mb-6 border-3 ${
-            lastRound.result === 'player' ? 'bg-green-900 border-green-500' :
-            lastRound.result === 'cpu' ? 'bg-red-900 border-red-500' :
-            'bg-orange-900 border-orange-500'
-          }`}>
-            <p className={`text-center text-3xl font-black mb-6 ${
-              lastRound.result === 'player' ? 'text-green-300' :
-              lastRound.result === 'cpu' ? 'text-red-300' : 'text-orange-300'
-            }`}>
-              {lastRound.result === 'player' ? '🎉 ¡GANASTE!' :
-               lastRound.result === 'cpu' ? '💀 PERDISTE' : '🤝 ¡EMPATE!'}
+          <div
+            className={`rounded-xl p-6 mb-6 border-3 ${
+              lastRound.result === 'player'
+                ? 'bg-green-900 border-green-500'
+                : lastRound.result === 'cpu'
+                ? 'bg-red-900 border-red-500'
+                : 'bg-orange-900 border-orange-500'
+            }`}
+          >
+            <p
+              className={`text-center text-3xl font-black mb-6 ${
+                lastRound.result === 'player'
+                  ? 'text-green-300'
+                  : lastRound.result === 'cpu'
+                  ? 'text-red-300'
+                  : 'text-orange-300'
+              }`}
+            >
+              {lastRound.result === 'player'
+                ? '🎉 ¡GANASTE!'
+                : lastRound.result === 'cpu'
+                ? '💀 PERDISTE'
+                : '🤝 ¡EMPATE!'}
             </p>
             <div className="flex justify-center items-center gap-12">
               <div className="text-center">
                 <div className="text-6xl mb-3">{moves[lastRound.playerMove].emoji}</div>
-                <p className="text-white text-lg font-bold">{moves[lastRound.playerMove].name}</p>
+                <p className="text-white text-lg font-bold">
+                  {moves[lastRound.playerMove].name}
+                </p>
               </div>
               <div className="text-white text-4xl font-black">VS</div>
               <div className="text-center">
                 <div className="text-6xl mb-3">{moves[lastRound.cpuMove].emoji}</div>
-                <p className="text-white text-lg font-bold">{moves[lastRound.cpuMove].name}</p>
+                <p className="text-white text-lg font-bold">
+                  {moves[lastRound.cpuMove].name}
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Botones */}
+        {/* Botones de jugada / pantalla de fin */}
         {!gameOver ? (
           <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((move) => (
               <button
                 key={move}
-                onClick={() => makeMove(move)}
+                onClick={() => handleMove(move)}
                 disabled={isLoading}
                 className="bg-gray-800 hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-gray-800 text-white font-bold py-12 rounded-xl transition-all disabled:cursor-not-allowed border-3 border-gray-700 hover:border-blue-500 group"
               >
-                <div className="text-6xl mb-3 group-hover:scale-110 transition-transform">{moves[move].emoji}</div>
+                <div className="text-6xl mb-3 group-hover:scale-110 transition-transform">
+                  {moves[move].emoji}
+                </div>
                 <div className="text-xl font-bold">{moves[move].name}</div>
               </button>
             ))}
@@ -159,9 +143,7 @@ const Game = ({ playerName, mode, onBackToMenu }) => {
               {winner === 'player' ? '¡Has ganado la partida!' : 'La CPU ha ganado'}
             </p>
             <div className="bg-gray-800 rounded-xl p-4 inline-block mb-6">
-              <p className="text-yellow-400 text-2xl font-black">
-                {gameState.score} puntos
-              </p>
+              <p className="text-yellow-400 text-2xl font-black">{score} puntos</p>
             </div>
             <br />
             <button
